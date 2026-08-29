@@ -122,6 +122,20 @@
     font-family: var(--font-mono); font-size: 14px; letter-spacing: var(--track); resize: vertical;
   }
   input:focus, textarea:focus { outline: none; border-color: var(--ember); }
+  /* Visible focus ring on every interactive control (keyboard users) */
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+    border-radius: var(--r-icon);
+  }
+  /* Screen-reader-only utility */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
   .field { margin-bottom: 16px; }
 
   /* ---- Buttons (pill, flat) ---- */
@@ -192,7 +206,8 @@
   .log .entry { padding: 5px 0; border-top: 1px solid var(--border-soft); }
   .toolbar { margin-top: 20px; }
   .err { color: var(--ember); font-size: 13px; margin-top: 8px; min-height: 16px; font-family: var(--font-mono); }
-  .disabled-veil { opacity: 0.45; pointer-events: none; }
+  /* Dimmed + fully non-interactive (mouse AND keyboard) — paired with the `inert` attribute in JS */
+  .disabled-veil { opacity: 0.45; }
 
   @media (prefers-reduced-motion: reduce) {
     .commit, .fired-flash { animation: none; }
@@ -201,6 +216,8 @@
 </style>
 </head>
 <body>
+<!-- Global status announcer for screen readers (state changes) -->
+<div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 <div class="wrap">
   <header>
     <div class="eyebrow">
@@ -236,7 +253,7 @@
           <input id="threshold" type="number" min="1" value="4" />
         </div>
         <button class="btn-ember" id="createBtn">Create sealed campaign</button>
-        <div class="err" id="campaignErr"></div>
+        <div class="err" id="campaignErr" role="alert" aria-live="assertive"></div>
       </div>
 
       <div class="card" id="pledgeCard">
@@ -247,8 +264,8 @@
           <textarea id="intent" rows="2" placeholder="e.g. i'll report Dana too but only if i'm not the only one"></textarea>
         </div>
         <button class="btn-ghost" id="pledgeBtn">Submit private pledge</button>
-        <div id="phrasedOut"></div>
-        <div class="err" id="pledgeErr"></div>
+        <div id="phrasedOut" aria-live="polite"></div>
+        <div class="err" id="pledgeErr" role="alert" aria-live="assertive"></div>
       </div>
 
       <div class="card" id="coordCard">
@@ -256,7 +273,7 @@
         <h2>AI coordinator <span class="ai-badge">GUARDRAIL</span></h2>
         <p class="hint">The coordinator can only act on Midnight's proof. Below the threshold it holds, and nothing crosses chains.</p>
         <button class="btn-ember" id="coordBtn" style="margin-top:14px;">Attempt coordinated reveal</button>
-        <div class="log" id="coordLog"></div>
+        <div class="log" id="coordLog" aria-live="polite"></div>
       </div>
 
       <div class="toolbar">
