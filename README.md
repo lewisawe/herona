@@ -4,6 +4,10 @@
 
 A commitment tool where people privately pledge to act *contingent on others*. Each pledge unlocks only when a **hidden threshold** of matching pledges is reached, and **nothing leaks before the trigger**: not the count, not the identities, not the target. When the threshold fires, Midnight's zero-knowledge proof lets another chain act on the verified result.
 
+![Coordinator page: Midnight ZK reveal on the right, real Sepolia cross-chain settlement on the left](docs/hero-coordinator.png)
+
+_Above: the coordinator view after the hidden threshold is met — the Midnight ledger unlocks and the result settles as a real transaction on Ethereum Sepolia ([example tx](https://sepolia.etherscan.io/tx/0xe96df598c1ca13dfc8053186b7953a0cfa328928111cb78aff1804757c65235a))._
+
 ## The problem
 
 Collective action has a first-mover problem. The first person to report a manager, sign a union card, or commit to a boycott takes all the risk and gets none of the safety of numbers. Any coordinator who holds everyone's early pledges can peek, leak, or be subpoenaed. That kills the movement before it reaches critical mass.
@@ -136,3 +140,7 @@ Version note: the committed artifacts target `@midnight-ntwrk/compact-runtime@0.
 ## Use cases (same primitive)
 
 Whistleblower coordination · union card drives / strike pledges · boycotts ("I'll switch banks if 10k others do") · any threshold-gated collective commitment.
+
+## Who this is for / business value
+
+Any organization that needs people to commit *together* but where committing first is dangerous or costly: labor organizers running card drives, compliance/ethics hotlines that only escalate when multiple independent reports name the same person, advocacy groups coordinating boycotts or divestment, and consortia that will only act if enough peers do. Today these are run on trusted spreadsheets or coordinators who can leak or be compelled to disclose early pledges. Sealed Collective Action removes that trusted party: the threshold logic is enforced by a zero-knowledge contract, and the coordinated action can trigger real downstream effects on any chain (a payout, an escrow release, a public registry entry) the moment, and only the moment, the bar is met. It is a reusable "commit contingent on N others, reveal nothing until N" primitive that could ship as an SDK or a hosted service for organizers.
