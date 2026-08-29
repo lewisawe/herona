@@ -1,0 +1,124 @@
+pragma language_version >= 0.16;
+import CompactStandardLibrary;
+
+// ============================================================================
+// Sealed Collective Action
+// ----------------------------------------------------------------------------
+// A threshold-gated commitment contract. People privately pledge to act
+// against a shared target, but each pledge only "counts" as an opaque
+// commitment on-chain. The coordinated moment unlocks ONLY when the number of
+// distinct pledges reaches a HIDDEN threshold.
+//
+// Privacy boundary (what the public ledger reveals BEFORE the reveal fires):
+//   - opaque pledge commitments (hashes; reveal no intent/identity)
+//   - opaque nullifiers (distinctness guard; reveal no identity)
+//   - a commitment to the threshold number (hides the actual number)
+//   - a commitment to the target (hides what the campaign is about)
+//   - unlocked = false
+//
+// What it does NOT reveal before firing:
+//   - who pledged, what the target is, what the threshold is,
+//     or how close the campaign is to firing.
+//
+// At reveal: the circuit proves in zero-knowledge that
+//   (a) the number of distinct commitments >= the committed threshold, and
+//   (b) the revealed target/threshold match their on-chain commitments,
+// then publishes the target and flips `unlocked`.
+// ============================================================================
+
+// ---- Public ledger state ---------------------------------------------------
+
+// Opaque commitments to individual pledges. A commitment reveals nothing about
+// the pledger's identity or intent.
+export ledger pledgeCommitments: Set<Bytes<32>>;
+
+// Nullifiers guarantee "one distinct pledge per participant" without linking
+// back to identity. A repeated pledge is rejected.
+export ledger nullifierSet: Set<Bytes<32>>;
+
+// Hides the campaign's target until reveal: H(target, campaignSalt).
+export ledger targetCommit: Bytes<32>;
+
+// Hides the threshold number: H(threshold, campaignSalt). Observers cannot
+// learn "how many pledges unlock this" and therefore cannot infer closeness.
+export ledger thresholdCommit: Bytes<32>;
+
+// The coordinated result. false until the hidden threshold is reached.
+export ledger unlocked: Boolean;
+
+// Only populated AT reveal. Empty/zero before then.
+export ledger revealedTarget: Bytes<32>;
+
+// True once a campaign has been created (single-campaign scope for the demo).
+export ledger initialized: Boolean;
+
+// ---- Witnesses (private, never leave the prover unless disclosed) ----------
+
+// The campaign creator's private threshold number and salt.
+witness campaignThreshold(): Uint<64>;
+witness campaignSalt(): Bytes<32>;
+
+// ---- Circuits --------------------------------------------------------------
+
+// Create the campaign. Publishes ONLY commitments to the target and threshold.
+// `target` is a client-side hash of the human-readable target string, so even
+// the argument carries no plaintext meaning; we bind it under a salt so the
+// on-chain commitment cannot be brute-forced from a small target space.
+export circuit createCampaign(target: Bytes<32>): [] {
+  assert(!initialized, "campaign already exists");
+  const salt = campaignSalt();
+  const threshold = campaignThreshold();
+  assert(threshold > 0, "threshold must be positive");
+
+  targetCommit = disclose(persistentHash<Vector<2, Bytes<32>>>([target, salt]));
+  thresholdCommit =
+    disclose(persistentHash<Vector<2, Bytes<32>>>([numToBytes(threshold), salt]));
+  unlocked = false;
+  initialized = true;
+}
+
+// Submit a pledge. `commitment` and `nullifier` are computed client-side and
+// are already opaque, so disclosing them leaks nothing. The contract enforces
+// distinctness (no double-pledging) via the nullifier set.
+export circuit submitPledge(commitment: Bytes<32>, nullifier: Bytes<32>): [] {
+  assert(initialized, "no campaign");
+  assert(!unlocked, "already unlocked");
+  assert(!nullifierSet.member(disclose(nullifier)), "duplicate pledge");
+  nullifierSet.insert(disclose(nullifier));
+  pledgeCommitments.insert(disclose(commitment));
+}
+
+// Attempt the coordinated reveal. Proves in zero-knowledge that the number of
+// distinct pledges has reached the HIDDEN threshold and that the revealed
+// values match their on-chain commitments. Only then does anything unlock.
+//
+// `target` and `threshold` are re-supplied here; the circuit checks they hash
+// (under the private salt) to the commitments stored at creation, so the
+// creator cannot move the goalposts and no one can forge a false reveal.
+export circuit tryReveal(target: Bytes<32>): [] {
+  assert(initialized, "no campaign");
+  assert(!unlocked, "already unlocked");
+
+  const salt = campaignSalt();
+  const threshold = campaignThreshold();
+
+  // Bind the reveal to the original commitments.
+  assert(
+    persistentHash<Vector<2, Bytes<32>>>([target, salt]) == targetCommit,
+    "target mismatch");
+  assert(
+    persistentHash<Vector<2, Bytes<32>>>([numToBytes(threshold), salt]) == thresholdCommit,
+    "threshold mismatch");
+
+  // The core threshold assertion. `size()` is only consulted here, inside the
+  // proof, at the moment of reveal.
+  assert(pledgeCommitments.size() >= threshold, "threshold not reached");
+
+  unlocked = true;
+  revealedTarget = disclose(target);
+}
+
+// Helper: pack a Uint<64> into Bytes<32> for hashing under the salt.
+circuit numToBytes(n: Uint<64>): Bytes<32> {
+  return persistentHash<Uint<64>>(n);
+}

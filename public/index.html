@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sealed Collective Action</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0F172A;
+    --card: #222735;
+    --muted: #272F42;
+    --muted-fg: #94A3B8;
+    --border: #334155;
+    --fg: #F8FAFC;
+    --primary: #F59E0B;   /* gold — trust */
+    --accent: #8B5CF6;    /* purple — ZK/tech */
+    --success: #22C55E;
+    --destructive: #EF4444;
+    --radius: 10px;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --display: 'Orbitron', var(--mono);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--mono);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 28px clamp(16px, 4vw, 48px) 64px;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+
+  header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 28px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand svg { width: 30px; height: 30px; flex: none; }
+  h1 {
+    font-family: var(--display); font-weight: 900;
+    font-size: clamp(20px, 3.2vw, 30px); letter-spacing: 0.02em;
+  }
+  .sub { color: var(--muted-fg); font-size: 13px; margin-top: 6px; }
+  .tracks { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; color: var(--muted-fg);
+  }
+
+  .grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .card + .card { margin-top: 20px; }
+  .card h2 {
+    font-family: var(--display); font-weight: 700; font-size: 13px;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-fg);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .card h2 svg { width: 16px; height: 16px; }
+
+  label { display: block; font-size: 12px; color: var(--muted-fg); margin-bottom: 6px; letter-spacing: 0.03em; }
+  input, textarea {
+    width: 100%; background: var(--bg); color: var(--fg);
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+    font-family: var(--mono); font-size: 14px; resize: vertical;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(139,92,246,0.25); }
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; }
+  .field { margin-bottom: 14px; }
+
+  button {
+    font-family: var(--mono); font-weight: 700; font-size: 13px; letter-spacing: 0.04em;
+    border: none; border-radius: 8px; padding: 11px 16px; cursor: pointer;
+    transition: filter .2s ease, background .2s ease, opacity .2s ease;
+  }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button:not(:disabled):hover { filter: brightness(1.1); }
+  .btn-primary { background: var(--primary); color: #0F172A; width: 100%; }
+  .btn-accent { background: var(--accent); color: #fff; width: 100%; }
+  .btn-ghost { background: transparent; color: var(--muted-fg); border: 1px solid var(--border); }
+
+  .hint { font-size: 12px; color: var(--muted-fg); margin-top: 8px; }
+  .phrased {
+    margin-top: 12px; padding: 12px; border-left: 3px solid var(--accent);
+    background: var(--muted); border-radius: 0 8px 8px 0; font-size: 13px;
+  }
+  .phrased .who { color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 4px; }
+
+  /* Observer panel — the hero visual */
+  .observer { position: relative; }
+  .status-line { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .badge {
+    font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: 0.1em;
+    padding: 5px 12px; border-radius: 999px; text-transform: uppercase;
+    border: 1px solid var(--border); color: var(--muted-fg);
+  }
+  .badge.sealed { color: var(--muted-fg); }
+  .badge.unlocked { color: #0F172A; background: var(--success); border-color: var(--success); }
+
+  .kv { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; font-size: 13px; margin-bottom: 6px; }
+  .kv .k { color: var(--muted-fg); }
+  .kv .v { color: var(--fg); word-break: break-all; }
+  .kv .v.mono { font-size: 12px; color: var(--muted-fg); }
+  .v.false { color: var(--destructive); }
+  .v.true { color: var(--success); }
+
+  .commit-list { margin-top: 16px; }
+  .commit-list .lbl { font-size: 11px; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .commits { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+  .commit {
+    font-size: 12px; color: var(--muted-fg); background: var(--muted);
+    border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px;
+    word-break: break-all; animation: drop .35s ease;
+  }
+  @keyframes drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+  .reveal-box {
+    margin-top: 16px; padding: 16px; border-radius: 8px; border: 1px dashed var(--border);
+    color: var(--muted-fg); font-size: 13px; text-align: center;
+  }
+  .reveal-box.on {
+    border-style: solid; border-color: var(--success);
+    background: rgba(34,197,94,0.08); color: var(--fg);
+  }
+  .reveal-box .target { font-family: var(--display); font-weight: 700; color: var(--primary); margin-top: 6px; font-size: 15px; }
+
+  .evm .kv .v.addr { font-size: 11px; }
+  .fired-flash { animation: flash .6s ease; }
+  @keyframes flash { 0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); } 100% { box-shadow: 0 0 0 12px rgba(34,197,94,0); } }
+
+  .log { margin-top: 14px; font-size: 12px; color: var(--muted-fg); }
+  .log .entry { padding: 4px 0; border-top: 1px solid var(--border); }
+  .toolbar { display: flex; gap: 10px; margin-top: 14px; }
+  .toolbar button { flex: 1; }
+  .err { color: var(--destructive); font-size: 12px; margin-top: 8px; min-height: 16px; }
+  .disabled-veil { opacity: 0.45; pointer-events: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .commit, .fired-flash { animation: none; }
+    button { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <!-- lock/shield icon (inline SVG, no emoji) -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <div>
+        <h1>SEALED COLLECTIVE ACTION</h1>
+        <div class="sub">Pledge privately. Nothing leaks until a hidden threshold of matching pledges is reached, then Midnight's proof lets another chain act.</div>
+        <div class="tracks">
+          <span class="tag">Midnight Hackathon</span>
+          <span class="tag">Cross-Chain</span>
+          <span class="tag">AI</span>
+          <span class="tag" id="phraserTag">agent: —</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: actions -->
+    <div>
+      <div class="card" id="campaignCard">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+          1 · Create campaign
+        </h2>
+        <div class="field">
+          <label for="target">Target (kept private until the threshold fires)</label>
+          <input id="target" value="Report regional manager Dana Reeves for systematic wage theft" />
+        </div>
+        <div class="field">
+          <label for="threshold">Hidden threshold — pledges required to unlock</label>
+          <input id="threshold" type="number" min="1" value="4" />
+        </div>
+        <button class="btn-primary" id="createBtn">Create sealed campaign</button>
+        <div class="err" id="campaignErr"></div>
+      </div>
+
+      <div class="card" id="pledgeCard">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          2 · Pledge in plain language
+        </h2>
+        <div class="field">
+          <label for="intent">Say it however you want. The AI phrases it; only an opaque commitment goes on-chain.</label>
+          <textarea id="intent" rows="2" placeholder="e.g. i'll report Dana too but only if i'm not the only one"></textarea>
+        </div>
+        <button class="btn-accent" id="pledgeBtn">Submit private pledge</button>
+        <div id="phrasedOut"></div>
+        <div class="err" id="pledgeErr"></div>
+      </div>
+
+      <div class="card" id="coordCard">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>
+          3 · AI coordinator (guardrail)
+        </h2>
+        <div class="hint">The coordinator can only act on Midnight's proof. Below the threshold, it holds and nothing crosses chains.</div>
+        <button class="btn-primary" id="coordBtn" style="margin-top:12px;">Attempt coordinated reveal</button>
+        <div class="log" id="coordLog"></div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn-ghost" id="resetBtn">Reset</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: what the chain reveals -->
+    <div>
+      <div class="card observer" id="observerCard">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          On-chain observer view
+        </h2>
+        <div class="status-line">
+          <span class="hint">Everything a chain snoop can read from the public ledger:</span>
+          <span class="badge sealed" id="badge">SEALED</span>
+        </div>
+        <div class="kv"><span class="k">initialized</span><span class="v" id="v-init">false</span></div>
+        <div class="kv"><span class="k">unlocked</span><span class="v false" id="v-unlocked">false</span></div>
+        <div class="kv"><span class="k">pledge count</span><span class="v" id="v-count">0</span></div>
+        <div class="kv"><span class="k">targetCommit</span><span class="v mono" id="v-tc">—</span></div>
+        <div class="kv"><span class="k">thresholdCommit</span><span class="v mono" id="v-thc">—</span></div>
+        <div class="kv"><span class="k">revealedTarget</span><span class="v mono" id="v-rt">—</span></div>
+
+        <div class="commit-list">
+          <div class="lbl">opaque commitments (no intent, no identity)</div>
+          <div class="commits" id="commits"></div>
+        </div>
+
+        <div class="reveal-box" id="revealBox">
+          Before the hidden threshold: the target stays hidden. No first-mover risk.
+          <div class="target" id="revealTarget" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="card evm" id="evmCard">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9v3a3 3 0 0 1-3 3H9"/></svg>
+          Cross-chain settlement (EVM)
+        </h2>
+        <div class="kv"><span class="k">settler</span><span class="v addr mono" id="e-addr">—</span></div>
+        <div class="kv"><span class="k">relayer</span><span class="v addr mono" id="e-relayer">—</span></div>
+        <div class="kv"><span class="k">isUnlocked()</span><span class="v false" id="e-unlocked">false</span></div>
+        <div class="kv"><span class="k">event</span><span class="v" id="e-event">—</span></div>
+        <div class="kv"><span class="k">gas used</span><span class="v" id="e-gas">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

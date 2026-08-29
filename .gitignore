@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.log
+.env
+.env.*
+/tmp/
+mcp.json.bak
+
+# Keep the compiled Compact artifacts committed (contract/src/managed/**) so the
+# demo runs without a Compact compiler on the judge's machine.
+
+
+# Internal planning / submission notes — keep local, not on GitHub
+IDEA.md
+DEMO_SCRIPT.md
+DEPLOY.md
