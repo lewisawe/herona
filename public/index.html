@@ -6,140 +6,192 @@
 <title>Sealed Collective Action</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet" />
+<!-- Aeonik/Rotonto substitutes per DESIGN.md: Inter (workhorse), Cooper-esque display via Rozha One, JetBrains Mono (data) -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Rozha+One&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
+  /* ============================================================
+     Sealed Collective Action — DESIGN.md (Mux) system, DARK theme.
+     Kept: Ember loud-once CTA, Amber pervasive punctuation, Signal
+     Blue links only, Sprout Green success; Rotonto hero + Aeonik
+     workhorse + JetBrains Mono data; 28px cards, pill buttons, flat
+     (no shadows), hairline dividers, uniform 0.02em tracking.
+     Changed: surfaces inverted to dark.
+     ============================================================ */
   :root {
-    --bg: #0F172A;
-    --card: #222735;
-    --muted: #272F42;
-    --muted-fg: #94A3B8;
-    --border: #334155;
-    --fg: #F8FAFC;
-    --primary: #F59E0B;   /* gold — trust */
-    --accent: #8B5CF6;    /* purple — ZK/tech */
-    --success: #22C55E;
-    --destructive: #EF4444;
-    --radius: 10px;
-    --mono: 'JetBrains Mono', ui-monospace, monospace;
-    --display: 'Orbitron', var(--mono);
+    /* Dark surface ladder (inverted from the light olive system) */
+    --canvas:      #1a1c1e;   /* page base — dark counterpart of olive drafting paper */
+    --card:        #242628;   /* Forge Dark, promoted to the floating card surface */
+    --inset:       #2e3134;   /* quiet inset wash / secondary surface */
+    --card-2:      #202224;   /* slightly deeper card for nested panels */
+
+    /* Text */
+    --ink:         #ffffff;   /* primary text on dark */
+    --graphite:    #adb9c6;   /* secondary text (pewter, lifted for dark) */
+    --steel:       #828c97;   /* muted / metadata */
+
+    /* Borders — hairlines */
+    --border:      #3a3d40;   /* dark linen border */
+    --border-soft: #313437;
+
+    /* Accents (unchanged from DESIGN.md) */
+    --ember:       #ff6100;   /* loud CTA fill / active state — once per screen */
+    --amber:       #ffb200;   /* pervasive punctuation: dividers, AI badge, underlines */
+    --marigold:    #bd8209;
+    --link:        #0091ff;   /* links only */
+    --green:       #00be43;   /* success / unlocked */
+
+    /* Type */
+    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;      /* Aeonik substitute */
+    --font-display: 'Rozha One', Cooper Black, Georgia, serif;        /* Rotonto substitute */
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --track: 0.02em;
+
+    /* Radii (DESIGN.md: exactly 3 card radii + pill) */
+    --r-card: 28px;
+    --r-small: 14px;
+    --r-icon: 2px;
+    --r-pill: 9999px;
   }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
   body {
-    background: var(--bg);
-    color: var(--fg);
-    font-family: var(--mono);
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-feature-settings: "dlig" on, "kern" on;
+    letter-spacing: var(--track);
     line-height: 1.5;
     min-height: 100vh;
-    padding: 28px clamp(16px, 4vw, 48px) 64px;
+    padding: 40px clamp(16px, 5vw, 56px) 96px;
   }
-  a { color: var(--accent); }
+  a { color: var(--link); text-underline-offset: 3px; }
+
   .wrap { max-width: 1200px; margin: 0 auto; }
 
-  header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 28px; }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand svg { width: 30px; height: 30px; flex: none; }
+  /* ---- Header / hero ---- */
+  header { margin-bottom: 56px; }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: var(--track);
+    text-transform: uppercase; color: var(--amber); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .eyebrow svg { width: 16px; height: 16px; }
   h1 {
-    font-family: var(--display); font-weight: 900;
-    font-size: clamp(20px, 3.2vw, 30px); letter-spacing: 0.02em;
+    font-family: var(--font-display); font-weight: 400;
+    font-size: clamp(34px, 6vw, 66px); line-height: 1.15; letter-spacing: var(--track);
+    color: var(--ink); max-width: 16ch;
   }
-  .sub { color: var(--muted-fg); font-size: 13px; margin-top: 6px; }
-  .tracks { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .lede {
+    font-family: var(--font-body); font-size: 18px; color: var(--graphite);
+    margin-top: 20px; max-width: 62ch; line-height: 1.5;
+  }
+  .tracks { margin-top: 24px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .tag {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
-    border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; color: var(--muted-fg);
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: var(--track);
+    text-transform: uppercase; color: var(--graphite);
+    border: 1px solid var(--border); border-radius: var(--r-pill); padding: 5px 12px;
   }
+  .tag.ai { background: var(--amber); color: #000; border-color: var(--amber); font-weight: 500; }
 
-  .grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 20px; align-items: start; }
-  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .rule { height: 1px; background: var(--amber); opacity: 0.5; margin: 40px 0; border: 0; }
 
+  /* ---- Grid ---- */
+  .grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 24px; align-items: start; }
+  @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+
+  /* ---- Cards (flat, 28px, hairline border, NO shadow) ---- */
   .card {
     background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 20px;
+    border-radius: var(--r-card); padding: 32px;
   }
-  .card + .card { margin-top: 20px; }
+  .card + .card { margin-top: 24px; }
+  .step-label {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: var(--track);
+    text-transform: uppercase; color: var(--amber); margin-bottom: 10px;
+  }
   .card h2 {
-    font-family: var(--display); font-weight: 700; font-size: 13px;
-    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-fg);
-    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-body); font-weight: 700; font-size: 21px;
+    letter-spacing: var(--track); color: var(--ink); margin-bottom: 18px;
   }
-  .card h2 svg { width: 16px; height: 16px; }
 
-  label { display: block; font-size: 12px; color: var(--muted-fg); margin-bottom: 6px; letter-spacing: 0.03em; }
+  label { display: block; font-size: 14px; color: var(--graphite); margin-bottom: 8px; letter-spacing: var(--track); }
   input, textarea {
-    width: 100%; background: var(--bg); color: var(--fg);
-    border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
-    font-family: var(--mono); font-size: 14px; resize: vertical;
+    width: 100%; background: var(--card-2); color: var(--ink);
+    border: 1px solid var(--border); border-radius: var(--r-small); padding: 12px 14px;
+    font-family: var(--font-mono); font-size: 14px; letter-spacing: var(--track); resize: vertical;
   }
-  input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(139,92,246,0.25); }
-  .row { display: flex; gap: 12px; }
-  .row > * { flex: 1; }
-  .field { margin-bottom: 14px; }
+  input:focus, textarea:focus { outline: none; border-color: var(--ember); }
+  .field { margin-bottom: 16px; }
 
+  /* ---- Buttons (pill, flat) ---- */
   button {
-    font-family: var(--mono); font-weight: 700; font-size: 13px; letter-spacing: 0.04em;
-    border: none; border-radius: 8px; padding: 11px 16px; cursor: pointer;
+    font-family: var(--font-body); font-weight: 700; font-size: 16px; letter-spacing: var(--track);
+    border: none; border-radius: var(--r-pill); padding: 14px 28px; cursor: pointer;
     transition: filter .2s ease, background .2s ease, opacity .2s ease;
   }
   button:disabled { opacity: 0.4; cursor: not-allowed; }
-  button:not(:disabled):hover { filter: brightness(1.1); }
-  .btn-primary { background: var(--primary); color: #0F172A; width: 100%; }
-  .btn-accent { background: var(--accent); color: #fff; width: 100%; }
-  .btn-ghost { background: transparent; color: var(--muted-fg); border: 1px solid var(--border); }
+  button:not(:disabled):hover { filter: brightness(1.08); }
+  /* Ember = the single loud CTA (create + reveal — the conversion moments) */
+  .btn-ember { background: var(--ember); color: #fff; width: 100%; }
+  /* Secondary actions: outlined pill, no fill */
+  .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); width: 100%; }
+  .btn-quiet { background: transparent; color: var(--steel); border: 1px solid var(--border); }
 
-  .hint { font-size: 12px; color: var(--muted-fg); margin-top: 8px; }
+  .hint { font-size: 14px; color: var(--steel); margin-top: 8px; letter-spacing: var(--track); }
   .phrased {
-    margin-top: 12px; padding: 12px; border-left: 3px solid var(--accent);
-    background: var(--muted); border-radius: 0 8px 8px 0; font-size: 13px;
+    margin-top: 16px; padding: 14px 16px; border-left: 2px solid var(--amber);
+    background: var(--inset); border-radius: 0 var(--r-small) var(--r-small) 0; font-size: 14px; color: var(--ink);
   }
-  .phrased .who { color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 4px; }
+  .phrased .who {
+    font-family: var(--font-mono); color: var(--amber); font-size: 12px; text-transform: uppercase;
+    letter-spacing: var(--track); display: block; margin-bottom: 6px;
+  }
+  .ai-badge {
+    display: inline-block; background: var(--amber); color: #000; font-family: var(--font-mono);
+    font-size: 12px; letter-spacing: var(--track); padding: 2px 7px; border-radius: var(--r-icon);
+  }
 
-  /* Observer panel — the hero visual */
-  .observer { position: relative; }
-  .status-line { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  /* ---- Observer panel (hero visual) ---- */
+  .status-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
   .badge {
-    font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: 0.1em;
-    padding: 5px 12px; border-radius: 999px; text-transform: uppercase;
-    border: 1px solid var(--border); color: var(--muted-fg);
+    font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: var(--track);
+    padding: 6px 14px; border-radius: var(--r-pill); text-transform: uppercase;
+    border: 1px solid var(--border); color: var(--steel);
   }
-  .badge.sealed { color: var(--muted-fg); }
-  .badge.unlocked { color: #0F172A; background: var(--success); border-color: var(--success); }
+  .badge.unlocked { color: #000; background: var(--green); border-color: var(--green); }
 
-  .kv { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; font-size: 13px; margin-bottom: 6px; }
-  .kv .k { color: var(--muted-fg); }
-  .kv .v { color: var(--fg); word-break: break-all; }
-  .kv .v.mono { font-size: 12px; color: var(--muted-fg); }
-  .v.false { color: var(--destructive); }
-  .v.true { color: var(--success); }
+  .kv { display: grid; grid-template-columns: 140px 1fr; gap: 10px 14px; font-size: 14px; margin-bottom: 8px; align-items: baseline; }
+  .kv .k { color: var(--steel); font-family: var(--font-mono); font-size: 13px; }
+  .kv .v { color: var(--ink); word-break: break-all; font-family: var(--font-mono); font-size: 13px; }
+  .kv .v.muted { color: var(--steel); }
+  .v.false { color: var(--ember); }
+  .v.true { color: var(--green); }
 
-  .commit-list { margin-top: 16px; }
-  .commit-list .lbl { font-size: 11px; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-  .commits { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+  .commit-list { margin-top: 20px; }
+  .commit-list .lbl { font-family: var(--font-mono); font-size: 12px; color: var(--steel); text-transform: uppercase; letter-spacing: var(--track); margin-bottom: 10px; }
+  .commits { display: flex; flex-direction: column; gap: 8px; min-height: 44px; }
   .commit {
-    font-size: 12px; color: var(--muted-fg); background: var(--muted);
-    border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--graphite); background: var(--card-2);
+    border: 1px solid var(--border-soft); border-radius: var(--r-small); padding: 9px 12px;
     word-break: break-all; animation: drop .35s ease;
   }
   @keyframes drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 
   .reveal-box {
-    margin-top: 16px; padding: 16px; border-radius: 8px; border: 1px dashed var(--border);
-    color: var(--muted-fg); font-size: 13px; text-align: center;
+    margin-top: 20px; padding: 20px; border-radius: var(--r-small); border: 1px solid var(--border);
+    color: var(--steel); font-size: 14px; text-align: center; line-height: 1.5;
   }
-  .reveal-box.on {
-    border-style: solid; border-color: var(--success);
-    background: rgba(34,197,94,0.08); color: var(--fg);
-  }
-  .reveal-box .target { font-family: var(--display); font-weight: 700; color: var(--primary); margin-top: 6px; font-size: 15px; }
+  .reveal-box.on { border-color: var(--green); background: rgba(0,190,67,0.08); color: var(--ink); }
+  .reveal-box .target { font-family: var(--font-display); color: var(--ember); margin-top: 10px; font-size: 22px; line-height: 1.2; }
 
-  .evm .kv .v.addr { font-size: 11px; }
   .fired-flash { animation: flash .6s ease; }
-  @keyframes flash { 0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); } 100% { box-shadow: 0 0 0 12px rgba(34,197,94,0); } }
+  @keyframes flash { 0% { box-shadow: 0 0 0 0 rgba(0,190,67,0.5); } 100% { box-shadow: 0 0 0 14px rgba(0,190,67,0); } }
 
-  .log { margin-top: 14px; font-size: 12px; color: var(--muted-fg); }
-  .log .entry { padding: 4px 0; border-top: 1px solid var(--border); }
-  .toolbar { display: flex; gap: 10px; margin-top: 14px; }
-  .toolbar button { flex: 1; }
-  .err { color: var(--destructive); font-size: 12px; margin-top: 8px; min-height: 16px; }
+  .log { margin-top: 16px; font-family: var(--font-mono); font-size: 12px; color: var(--steel); letter-spacing: var(--track); }
+  .log .entry { padding: 5px 0; border-top: 1px solid var(--border-soft); }
+  .toolbar { margin-top: 20px; }
+  .err { color: var(--ember); font-size: 13px; margin-top: 8px; min-height: 16px; font-family: var(--font-mono); }
   .disabled-veil { opacity: 0.45; pointer-events: none; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -151,93 +203,85 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="brand">
-      <!-- lock/shield icon (inline SVG, no emoji) -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <div class="eyebrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#ffb200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
       </svg>
-      <div>
-        <h1>SEALED COLLECTIVE ACTION</h1>
-        <div class="sub">Pledge privately. Nothing leaks until a hidden threshold of matching pledges is reached, then Midnight's proof lets another chain act.</div>
-        <div class="tracks">
-          <span class="tag">Midnight Hackathon</span>
-          <span class="tag">Cross-Chain</span>
-          <span class="tag">AI</span>
-          <span class="tag" id="phraserTag">agent: —</span>
-        </div>
-      </div>
+      MIDNIGHT HACKATHON · CROSS-CHAIN + AI
+    </div>
+    <h1>Sealed Collective Action</h1>
+    <p class="lede">Pledge privately, contingent on others. Nothing leaks until a hidden threshold of matching pledges is reached, then Midnight's zero-knowledge proof lets another chain act on the verified result.</p>
+    <div class="tracks">
+      <span class="tag">Midnight ZK core</span>
+      <span class="tag">EVM settlement</span>
+      <span class="tag ai">AI coordinator</span>
+      <span class="tag" id="phraserTag">agent: —</span>
     </div>
   </header>
+
+  <hr class="rule" />
 
   <div class="grid">
     <!-- LEFT: actions -->
     <div>
       <div class="card" id="campaignCard">
-        <h2>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
-          1 · Create campaign
-        </h2>
+        <div class="step-label">Step 1</div>
+        <h2>Create campaign</h2>
         <div class="field">
-          <label for="target">Target (kept private until the threshold fires)</label>
+          <label for="target">Target — kept private until the threshold fires</label>
           <input id="target" value="Report regional manager Dana Reeves for systematic wage theft" />
         </div>
         <div class="field">
           <label for="threshold">Hidden threshold — pledges required to unlock</label>
           <input id="threshold" type="number" min="1" value="4" />
         </div>
-        <button class="btn-primary" id="createBtn">Create sealed campaign</button>
+        <button class="btn-ember" id="createBtn">Create sealed campaign</button>
         <div class="err" id="campaignErr"></div>
       </div>
 
       <div class="card" id="pledgeCard">
-        <h2>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-          2 · Pledge in plain language
-        </h2>
+        <div class="step-label">Step 2</div>
+        <h2>Pledge in plain language</h2>
         <div class="field">
-          <label for="intent">Say it however you want. The AI phrases it; only an opaque commitment goes on-chain.</label>
+          <label for="intent">Say it however you want. <span class="ai-badge">AI</span> phrases it; only an opaque commitment goes on-chain.</label>
           <textarea id="intent" rows="2" placeholder="e.g. i'll report Dana too but only if i'm not the only one"></textarea>
         </div>
-        <button class="btn-accent" id="pledgeBtn">Submit private pledge</button>
+        <button class="btn-ghost" id="pledgeBtn">Submit private pledge</button>
         <div id="phrasedOut"></div>
         <div class="err" id="pledgeErr"></div>
       </div>
 
       <div class="card" id="coordCard">
-        <h2>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>
-          3 · AI coordinator (guardrail)
-        </h2>
-        <div class="hint">The coordinator can only act on Midnight's proof. Below the threshold, it holds and nothing crosses chains.</div>
-        <button class="btn-primary" id="coordBtn" style="margin-top:12px;">Attempt coordinated reveal</button>
+        <div class="step-label">Step 3</div>
+        <h2>AI coordinator <span class="ai-badge">GUARDRAIL</span></h2>
+        <p class="hint">The coordinator can only act on Midnight's proof. Below the threshold it holds, and nothing crosses chains.</p>
+        <button class="btn-ember" id="coordBtn" style="margin-top:14px;">Attempt coordinated reveal</button>
         <div class="log" id="coordLog"></div>
       </div>
 
       <div class="toolbar">
-        <button class="btn-ghost" id="resetBtn">Reset</button>
+        <button class="btn-quiet" id="resetBtn">Reset</button>
       </div>
     </div>
 
     <!-- RIGHT: what the chain reveals -->
     <div>
       <div class="card observer" id="observerCard">
-        <h2>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-          On-chain observer view
-        </h2>
+        <div class="step-label">Live · public ledger</div>
         <div class="status-line">
-          <span class="hint">Everything a chain snoop can read from the public ledger:</span>
-          <span class="badge sealed" id="badge">SEALED</span>
+          <h2 style="margin:0;">On-chain observer view</h2>
+          <span class="badge" id="badge">SEALED</span>
         </div>
+        <p class="hint" style="margin-top:0;margin-bottom:18px;">Everything a chain snoop can read from the public ledger:</p>
         <div class="kv"><span class="k">initialized</span><span class="v" id="v-init">false</span></div>
         <div class="kv"><span class="k">unlocked</span><span class="v false" id="v-unlocked">false</span></div>
         <div class="kv"><span class="k">pledge count</span><span class="v" id="v-count">0</span></div>
-        <div class="kv"><span class="k">targetCommit</span><span class="v mono" id="v-tc">—</span></div>
-        <div class="kv"><span class="k">thresholdCommit</span><span class="v mono" id="v-thc">—</span></div>
-        <div class="kv"><span class="k">revealedTarget</span><span class="v mono" id="v-rt">—</span></div>
+        <div class="kv"><span class="k">targetCommit</span><span class="v muted" id="v-tc">—</span></div>
+        <div class="kv"><span class="k">thresholdCommit</span><span class="v muted" id="v-thc">—</span></div>
+        <div class="kv"><span class="k">revealedTarget</span><span class="v muted" id="v-rt">—</span></div>
 
         <div class="commit-list">
-          <div class="lbl">opaque commitments (no intent, no identity)</div>
+          <div class="lbl">opaque commitments — no intent, no identity</div>
           <div class="commits" id="commits"></div>
         </div>
 
@@ -248,12 +292,10 @@
       </div>
 
       <div class="card evm" id="evmCard">
-        <h2>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9v3a3 3 0 0 1-3 3H9"/></svg>
-          Cross-chain settlement (EVM)
-        </h2>
-        <div class="kv"><span class="k">settler</span><span class="v addr mono" id="e-addr">—</span></div>
-        <div class="kv"><span class="k">relayer</span><span class="v addr mono" id="e-relayer">—</span></div>
+        <div class="step-label">Cross-chain</div>
+        <h2>Settlement (EVM)</h2>
+        <div class="kv"><span class="k">settler</span><span class="v muted" id="e-addr">—</span></div>
+        <div class="kv"><span class="k">relayer</span><span class="v muted" id="e-relayer">—</span></div>
         <div class="kv"><span class="k">isUnlocked()</span><span class="v false" id="e-unlocked">false</span></div>
         <div class="kv"><span class="k">event</span><span class="v" id="e-event">—</span></div>
         <div class="kv"><span class="k">gas used</span><span class="v" id="e-gas">—</span></div>

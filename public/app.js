@@ -34,8 +34,12 @@ function render(s) {
   $('v-unlocked').className = 'v ' + (unlocked ? 'true' : 'false');
   $('v-count').textContent = s.pledgeCount;
   $('v-tc').textContent = short(s.targetCommit);
+  $('v-tc').className = 'v muted';
   $('v-thc').textContent = short(s.thresholdCommit);
-  $('v-rt').textContent = s.revealedTarget && s.revealedTarget !== ZERO ? short(s.revealedTarget) : '— (zero until reveal)';
+  $('v-thc').className = 'v muted';
+  const rtShown = s.revealedTarget && s.revealedTarget !== ZERO;
+  $('v-rt').textContent = rtShown ? short(s.revealedTarget) : '— (zero until reveal)';
+  $('v-rt').className = 'v ' + (rtShown ? 'true' : 'muted');
 
   // opaque commitments list
   const box = $('commits');
