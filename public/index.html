@@ -122,6 +122,10 @@
     font-family: var(--font-mono); font-size: 14px; letter-spacing: var(--track); resize: vertical;
   }
   input:focus, textarea:focus { outline: none; border-color: var(--ember); }
+  /* Auto-growing textareas: wrap long content and expand vertically instead of hiding it */
+  textarea.autogrow {
+    overflow: hidden; resize: none; min-height: 46px; line-height: 1.4;
+  }
   /* Visible focus ring on every interactive control (keyboard users) */
   button:focus-visible,
   input:focus-visible,
@@ -246,7 +250,7 @@
         <h2>Create campaign</h2>
         <div class="field">
           <label for="target">Target — kept private until the threshold fires</label>
-          <input id="target" value="Report regional manager Dana Reeves for systematic wage theft" />
+          <textarea id="target" rows="1" class="autogrow">Report regional manager Dana Reeves for systematic wage theft</textarea>
         </div>
         <div class="field">
           <label for="threshold">Hidden threshold — pledges required to unlock</label>
@@ -261,7 +265,7 @@
         <h2>Pledge in plain language</h2>
         <div class="field">
           <label for="intent">Say it however you want. <span class="ai-badge">AI</span> phrases it; only an opaque commitment goes on-chain.</label>
-          <textarea id="intent" rows="2" placeholder="e.g. i'll report Dana too but only if i'm not the only one"></textarea>
+          <textarea id="intent" rows="2" class="autogrow" placeholder="e.g. i'll report Dana too but only if i'm not the only one"></textarea>
         </div>
         <button class="btn-ghost" id="pledgeBtn">Submit private pledge</button>
         <div id="phrasedOut" aria-live="polite"></div>

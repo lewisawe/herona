@@ -167,6 +167,7 @@ $('pledgeBtn').onclick = async () => {
     $('phrasedOut').innerHTML =
       `<div class="phrased"><span class="who">AI (${escapeHtml((r.phraser||'').replace(' (→ offline on error)',''))}) phrased →</span>${escapeHtml(r.phrased)}</div>`;
     $('intent').value = '';
+    autoGrow($('intent'));
     render(r.snapshot);
     announce(`Pledge sealed. ${r.snapshot.pledgeCount} opaque commitment${r.snapshot.pledgeCount === 1 ? '' : 's'} on the ledger. Still sealed.`);
     $('intent').focus();
@@ -212,6 +213,16 @@ $('resetBtn').onclick = async () => {
   announce('Reset. No campaign.');
   $('target').focus();
 };
+
+// Auto-grow textareas as content is typed (so long targets/pledges never hide text).
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+document.querySelectorAll('textarea.autogrow').forEach((el) => {
+  el.addEventListener('input', () => autoGrow(el));
+  autoGrow(el); // size to initial content on load
+});
 
 // Keyboard: Enter submits the target field and the pledge textarea (Shift+Enter = newline).
 $('target').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('createBtn').click(); } });
