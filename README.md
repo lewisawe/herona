@@ -47,7 +47,32 @@ AWS_PROFILE=simi-ops AWS_REGION=us-east-1 npm run ui
 PHRASER=offline npm run ui
 ```
 
-Open **http://localhost:8787**. Create a campaign with a hidden threshold, submit pledges in plain language (the AI phrases each one), and watch the **On-chain observer** panel: opaque hashes accumulate while `unlocked` stays `false`. The pledge that crosses the hidden threshold flips it to **UNLOCKED**, reveals the target, and settles cross-chain on the EVM panel.
+Open **http://localhost:8787**. The UI is split by role, matching how this works in the real world:
+
+| Route | Role | What it shows |
+|-------|------|---------------|
+| `/` | **Organizer** | Create a campaign (target + hidden threshold) and watch the live on-chain observer panel |
+| `/pledge` | **Participant** | Add a private pledge in plain language — isolated: cannot see the count, the target, or how close the campaign is |
+| `/coordinator` | **Coordinator** | The AI guardrail + the cross-chain settlement panel (Midnight ledger vs EVM chain, side by side) |
+
+Create a campaign, submit pledges in plain language (the AI phrases each one), and watch the **On-chain observer** panel: opaque hashes accumulate while `unlocked` stays `false`. The pledge that crosses the hidden threshold flips it to **UNLOCKED**, reveals the target, and settles cross-chain.
+
+### Live cross-chain settlement on a public testnet (optional)
+
+By default the EVM settlement leg runs on an in-process EVM (offline, deterministic). To settle on **real Ethereum Sepolia** instead — a transaction anyone can open on Etherscan — copy `.env.example` to `.env` and fill in:
+
+```bash
+cp .env.example .env
+# then set:
+#   EVM_RPC_URL=https://sepolia.infura.io/v3/<your-project-id>
+#   EVM_DEPLOYER_KEY=0x<a funded throwaway Sepolia key>
+npm run ui   # logs: "EVM settlement: LIVE testnet (Sepolia)"
+```
+
+In live mode, creating a campaign deploys the settler to Sepolia and each coordinated reveal is a real `settle()` transaction; the coordinator page shows the tx hash as a clickable Etherscan link. The **Midnight side stays local** (real ZK circuits); only the EVM leg goes on-chain.
+
+**Proof it works — a real settlement from a live run:**
+[`0xe96df598c1ca13dfc8053186b7953a0cfa328928111cb78aff1804757c65235a`](https://sepolia.etherscan.io/tx/0xe96df598c1ca13dfc8053186b7953a0cfa328928111cb78aff1804757c65235a) (Sepolia, block 11592444, emitted `CollectiveActionUnlocked`).
 
 ### Option B — Terminal demo
 
@@ -80,10 +105,10 @@ npm run typecheck
 | `evm/CollectiveActionSettler.sol` | The "other chain" contract that acts on the verified reveal |
 | `src/crypto.ts` | Client-side commitments, matching the contract's hashing exactly |
 | `src/sealed-chain.ts` | Drives the Compact circuits locally via `@midnight-ntwrk/compact-runtime` |
-| `src/evm-chain.ts` | Compiles + runs the Solidity contract on an in-process EVM |
+| `src/evm-chain.ts` | The EVM settler: in-process EVM by default, or live Sepolia via ethers when configured |
 | `src/agent.ts` | AI pledge agent (Bedrock Nova / offline) + coordinator guardrail |
 | `src/server.ts` | Thin Express backend wrapping the modules above for the web UI |
-| `public/` | The web UI (vanilla HTML/CSS/JS, no build step) |
+| `public/` | The role-based web UI: `index.html` (organizer), `pledge.html`, `coordinator.html`, shared `styles.css` + `shared.js` (vanilla, no build step) |
 | `src/demo.ts` | The end-to-end terminal demo |
 
 ## Privacy boundary (honest scope)
@@ -96,7 +121,7 @@ npm run typecheck
 
 For the hackathon, a relayer submits the Midnight reveal to the EVM `settle` function, which binds each settlement to the Midnight `targetCommit` (so a settlement is permanently tied to the exact campaign committed on Midnight). In production the relayer is replaced by an on-chain verifier / light client that checks the Midnight proof directly; the interface is intentionally that shape.
 
-The EVM leg runs on an in-process EVM (`@ethereumjs/vm`) for a deterministic, offline demo. Moving to a public testnet is an RPC/signer change, not a logic change: the `SealedChain` and `EvmChain` classes are the seams where the local runtime and in-process VM would be swapped for MidnightJS providers and an EVM RPC/signer.
+The EVM leg runs on an in-process EVM (`@ethereumjs/vm`) for a deterministic, offline demo, and can settle on a **real public testnet (Ethereum Sepolia)** when `EVM_RPC_URL` and `EVM_DEPLOYER_KEY` are set (see Quick start). Moving between them is a provider/signer change, not a logic change: the `SealedChain` and `EvmChain` classes are the seams. The Midnight side runs its real ZK circuits locally in both modes.
 
 ## Build the contract yourself (optional)
 
