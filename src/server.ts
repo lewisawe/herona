@@ -41,6 +41,7 @@ import {
   CoordinatorAgent,
   resilient,
   selectPhraser,
+  validateIntent,
   type Phraser,
 } from './agent.js';
 import { pledgeCommitment, targetToBytes32, toHex } from './crypto.js';
@@ -171,6 +172,8 @@ app.post('/api/pledge', async (req, res) => {
     const s = requireSession();
     const rawIntent = String(req.body?.rawIntent ?? '').trim();
     if (!rawIntent) return res.status(400).json({ error: 'rawIntent required' });
+    const invalid = validateIntent(rawIntent);
+    if (invalid) return res.status(400).json({ error: invalid });
 
     const result = await s.pledgeAgent.pledge(rawIntent, s.target);
     // Derive the opaque commitment for display (same scheme the contract uses).

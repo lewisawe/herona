@@ -37,6 +37,32 @@ function stripQuotes(s: string): string {
   return t;
 }
 
+/**
+ * Reject inputs that carry no actionable pledge intent, so the model is never
+ * asked to fabricate a pledge from nothing. Requires a few words and at least
+ * one action-ish verb / commitment cue. Returns an error string, or null if OK.
+ */
+export function validateIntent(raw: string): string | null {
+  const s = raw.trim().toLowerCase();
+  if (s.length < 8) return 'Tell us what you will do — a full sentence, e.g. "I will report the manager if others do too".';
+  if (s.split(/\s+/).length < 3) return 'Add a bit more — what action will you take, and contingent on others?';
+  // Reject bare yes/no/filler with no verb-like content.
+  const bareResponses = ['no', 'yes', 'maybe', 'ok', 'okay', 'sure', 'nope', 'yeah', 'idk', 'nothing'];
+  if (bareResponses.includes(s)) return 'Describe the action you are pledging to take, not just yes/no.';
+  const cue = /\b(will|i'?ll|pledge|report|sign|join|switch|commit|do|support|boycott|file|submit|vote|donate|leave|quit|walk|strike|refuse|stop)\b/;
+  if (!cue.test(s)) return 'Describe a concrete action (e.g. report, sign, join, switch, commit) you will take.';
+  return null;
+}
+
+const SHARED_SYSTEM_PROMPT =
+  'You rewrite a person\'s own words into ONE concise first-person pledge sentence. ' +
+  'Rules: (1) Return only the sentence, no commentary. ' +
+  '(2) Reflect ONLY what the person actually said — never invent an action they did not state. ' +
+  '(3) The pledge is contingent on a HIDDEN number of others; NEVER state or invent a specific number ' +
+  '(do not write "at least 10", "3 others", etc.). Use wording like "if enough others pledge the same" ' +
+  'or "contingent on enough others". ' +
+  '(4) If the person\'s words do not describe a concrete action, do not fabricate one — echo their words as a pledge as best you can without adding facts.';
+
 export interface Phraser {
   readonly name: string;
   /** Normalize a raw intent into a crisp, canonical pledge statement. */
@@ -88,11 +114,7 @@ export class BedrockNovaPhraser implements Phraser {
       modelId: this.modelId,
       system: [
         {
-          text:
-            'You help a person phrase a private, threshold-contingent pledge. ' +
-            'Return ONE concise first-person sentence and nothing else. ' +
-            'Never invent facts beyond the intent. The pledge is contingent on a ' +
-            'hidden number of others pledging the same thing.',
+          text: SHARED_SYSTEM_PROMPT,
         },
       ],
       messages: [
@@ -129,11 +151,7 @@ export class OpenAiPhraser implements Phraser {
         messages: [
           {
             role: 'system',
-            content:
-              'You help a person phrase a private, threshold-contingent pledge. ' +
-              'Return ONE concise first-person sentence. Do not add commentary. ' +
-              'Never invent facts beyond the intent. The pledge is contingent on a ' +
-              'hidden number of others pledging the same thing.',
+            content: SHARED_SYSTEM_PROMPT,
           },
           {
             role: 'user',
