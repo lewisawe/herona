@@ -13,8 +13,29 @@
 import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
+
+// Minimal .env loader (no dependency). Loads KEY=VALUE lines from ./.env into
+// process.env if not already set. Used for EVM_RPC_URL / EVM_DEPLOYER_KEY.
+(function loadDotEnv() {
+  const envPath = join(process.cwd(), '.env');
+  if (!existsSync(envPath)) return;
+  for (const raw of readFileSync(envPath, 'utf8').split('\n')) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const eq = line.indexOf('=');
+    if (eq === -1) continue;
+    const key = line.slice(0, eq).trim();
+    let val = line.slice(eq + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (!(key in process.env)) process.env[key] = val;
+  }
+})();
+
 import { SealedChain } from './sealed-chain.js';
-import { EvmChain } from './evm-chain.js';
+import { EvmChain, type IEvmChain } from './evm-chain.js';
 import {
   PledgeAgent,
   CoordinatorAgent,
@@ -35,13 +56,13 @@ interface PledgeRecord {
 
 interface Session {
   midnight: SealedChain;
-  evm: EvmChain;
+  evm: IEvmChain;
   pledgeAgent: PledgeAgent;
   coordinator: CoordinatorAgent;
   target: string; // held server-side only, like a campaign creator's device
   pledges: PledgeRecord[];
   phraserName: string;
-  settlement: { gasUsed: string | null; eventName: string | null } | null;
+  settlement: { gasUsed: string | null; eventName: string | null; txHash: string | null } | null;
 }
 
 let session: Session | null = null;
@@ -69,6 +90,7 @@ async function snapshot(s: Session) {
     evmUnlocked,
     evmAddress: s.evm.address,
     relayer: s.evm.relayer,
+    evmNetwork: s.evm.network,
     phraser: s.phraserName,
     // opaque commitments accumulating on the ledger (the "silence" visual)
     commitments: s.pledges.map((p) => p.commitment),
@@ -76,6 +98,11 @@ async function snapshot(s: Session) {
     // populated once settled, so a page reload still shows the EVM result
     settlementEvent: s.settlement?.eventName ?? null,
     settlementGas: s.settlement?.gasUsed ?? null,
+    settlementTx: s.settlement?.txHash ?? null,
+    settlementExplorer:
+      s.settlement?.txHash && s.evm.explorerBase
+        ? `${s.evm.explorerBase}/tx/${s.settlement.txHash}`
+        : null,
   };
 }
 
@@ -142,6 +169,7 @@ app.post('/api/coordinate', async (req, res) => {
       s.settlement = {
         gasUsed: outcome.settlement.gasUsed?.toString() ?? null,
         eventName: outcome.settlement.event ? 'CollectiveActionUnlocked' : null,
+        txHash: outcome.settlement.txHash ?? null,
       };
     }
     res.json({
@@ -184,6 +212,10 @@ app.post('/api/reset', (_req, res) => {
 });
 
 app.listen(PORT, () => {
+  const evmMode = process.env.EVM_RPC_URL && process.env.EVM_DEPLOYER_KEY
+    ? `LIVE testnet (${process.env.EVM_NETWORK_LABEL ?? 'Sepolia'})`
+    : 'local (in-process EVM)';
   console.log(`\n  Sealed Collective Action UI → http://localhost:${PORT}`);
-  console.log(`  Pledge agent: ${phraser.name}\n`);
+  console.log(`  Pledge agent: ${phraser.name}`);
+  console.log(`  EVM settlement: ${evmMode}\n`);
 });

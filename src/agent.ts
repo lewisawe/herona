@@ -19,7 +19,7 @@
  * back to a deterministic phraser so the whole system runs offline.
  */
 import type { SealedChain } from './sealed-chain.js';
-import type { EvmChain, SettleReceipt } from './evm-chain.js';
+import type { SettleReceipt, IEvmChain } from './evm-chain.js';
 import {
   BedrockRuntimeClient,
   ConverseCommand,
@@ -223,7 +223,7 @@ export interface CoordinationOutcome {
 export class CoordinatorAgent {
   constructor(
     private midnight: SealedChain,
-    private evm: EvmChain,
+    private evm: IEvmChain,
   ) {}
 
   /**
