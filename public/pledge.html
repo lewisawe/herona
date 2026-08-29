@@ -27,9 +27,10 @@
     <div class="card" id="statusCard">
       <div class="step-label">Campaign status</div>
       <div class="status-line">
-        <h2 style="margin:0;">This campaign is</h2>
+        <h2 style="margin:0;">You're pledging toward</h2>
         <span class="badge" id="badge">NO CAMPAIGN</span>
       </div>
+      <p id="targetLine" style="font-family:var(--font-display); font-size:20px; color:var(--amber); margin:6px 0 10px; display:none;"></p>
       <p class="hint" id="statusHint" style="margin-top:0;">Waiting for an organizer to open a campaign…</p>
     </div>
 
@@ -60,17 +61,21 @@
   function applyStatus(s) {
     const initialized = s && s.initialized;
     const unlocked = initialized && s.unlocked;
+    const targetLine = $('targetLine');
     if (!initialized) {
       $('badge').textContent = 'NO CAMPAIGN'; $('badge').className = 'badge';
+      targetLine.style.display = 'none';
       $('statusHint').textContent = 'Waiting for an organizer to open a campaign…';
       $('pledgeCard').classList.add('disabled-veil'); $('pledgeCard').setAttribute('inert', '');
       return;
     }
+    // Show the cause the participant is pledging toward (they were invited to it).
+    if (s.target) { targetLine.textContent = '“' + s.target + '”'; targetLine.style.display = 'block'; }
     $('badge').textContent = unlocked ? 'UNLOCKED' : 'SEALED';
     $('badge').className = 'badge ' + (unlocked ? 'unlocked' : '');
     $('statusHint').textContent = unlocked
-      ? 'The threshold has been reached and the campaign has unlocked. Pledging is closed.'
-      : 'Sealed. Add your pledge below — nothing about the campaign is revealed to you.';
+      ? 'The hidden threshold was reached — this campaign has unlocked and settled cross-chain. Pledging is closed.'
+      : 'Sealed and open for pledges. Add yours below. You cannot see how many others have pledged or how close it is — that is the point.';
     const closed = !!unlocked;
     $('pledgeCard').classList.toggle('disabled-veil', closed);
     if (closed) $('pledgeCard').setAttribute('inert', ''); else $('pledgeCard').removeAttribute('inert');
@@ -88,7 +93,11 @@
       $('intent').value = '';
       autoGrow($('intent'));
       applyStatus(r.snapshot);
-      announce('Your pledge is sealed as an opaque commitment. The campaign stays sealed.');
+      if (r.fired) {
+        announce('Your pledge reached the hidden threshold. The campaign unlocked and settled cross-chain.');
+      } else {
+        announce('Your pledge is sealed as an opaque commitment. The campaign stays sealed.');
+      }
     } catch (e) {
       $('pledgeErr').textContent = e.message;
     } finally {

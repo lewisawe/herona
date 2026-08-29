@@ -82,6 +82,10 @@ async function snapshot(s: Session) {
     initialized: v.initialized,
     unlocked: v.unlocked,
     pledgeCount: v.pledgeCount,
+    // The campaign's cause. Participants are invited around it, so it is shown
+    // to them; on-chain it lives only as a salted commitment (targetCommit).
+    // What stays hidden from participants is the count, threshold, and closeness.
+    target: s.target,
     targetCommit: v.targetCommit,
     thresholdCommit: v.thresholdCommit,
     revealedTarget: v.revealedTarget,
@@ -108,6 +112,25 @@ async function snapshot(s: Session) {
 
 const app = express();
 app.use(express.json());
+
+/**
+ * Run the coordinator's guardrailed reveal. Only fires when the Midnight ZK
+ * proof is valid (threshold met); otherwise holds. Records the settlement on
+ * the session. Shared by the manual /api/coordinate endpoint and the automatic
+ * post-pledge check.
+ */
+async function runCoordinate(s: Session) {
+  const outcome = await s.coordinator.coordinate();
+  if (outcome.fired && outcome.settlement) {
+    s.settlement = {
+      gasUsed: outcome.settlement.gasUsed?.toString() ?? null,
+      eventName: outcome.settlement.event ? 'CollectiveActionUnlocked' : null,
+      txHash: outcome.settlement.txHash ?? null,
+    };
+  }
+  return outcome;
+}
+
 app.use(express.static(join(__dirname, '..', 'public')));
 
 // Clean routes for the role pages.
@@ -154,7 +177,18 @@ app.post('/api/pledge', async (req, res) => {
     const commitment = toHex(pledgeCommitment(result.secret, targetToBytes32(s.target)));
     s.pledges.push({ index: s.pledges.length + 1, phrased: result.phrased, commitment });
 
-    res.json({ phrased: result.phrased, phraser: result.phraser, snapshot: await snapshot(s) });
+    // Auto-coordinate: the coordinator attempts the reveal after every pledge.
+    // The guardrail is unchanged — it only fires when the ZK proof is valid
+    // (threshold genuinely met), so the campaign unlocks the moment it should
+    // rather than silently over-counting until someone clicks a button.
+    const auto = await runCoordinate(s);
+
+    res.json({
+      phrased: result.phrased,
+      phraser: result.phraser,
+      fired: auto.fired,
+      snapshot: await snapshot(s),
+    });
   } catch (e: any) {
     res.status(400).json({ error: String(e?.message ?? e) });
   }
@@ -164,14 +198,7 @@ app.post('/api/pledge', async (req, res) => {
 app.post('/api/coordinate', async (req, res) => {
   try {
     const s = requireSession();
-    const outcome = await s.coordinator.coordinate();
-    if (outcome.fired && outcome.settlement) {
-      s.settlement = {
-        gasUsed: outcome.settlement.gasUsed?.toString() ?? null,
-        eventName: outcome.settlement.event ? 'CollectiveActionUnlocked' : null,
-        txHash: outcome.settlement.txHash ?? null,
-      };
-    }
+    const outcome = await runCoordinate(s);
     res.json({
       fired: outcome.fired,
       reason: outcome.reason,
