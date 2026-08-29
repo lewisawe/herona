@@ -32,7 +32,16 @@ function busy(btn, isBusy, busyLabel) {
 function autoGrow(el) {
   if (!el) return;
   el.style.height = 'auto';
-  el.style.height = el.scrollHeight + 'px';
+  // +2px guards against sub-pixel rounding that can clip the last line.
+  el.style.height = (el.scrollHeight + 2) + 'px';
+}
+
+// Re-measure autogrow textareas once web fonts finish loading (scrollHeight is
+// wrong while the fallback font is still in use, which can clip initial text).
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => {
+    document.querySelectorAll('textarea.autogrow').forEach((el) => autoGrow(el));
+  });
 }
 
 async function api(path, body) {
