@@ -31,7 +31,7 @@
 
     /* Type */
     --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;      /* Aeonik substitute */
-    --font-display: 'Rozha One', Cooper Black, Georgia, serif;        /* Rotonto substitute */
+    --font-display: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;  /* display: bold geometric */
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
     --track: 0.02em;
 
@@ -67,8 +67,8 @@
   }
   .eyebrow svg { width: 16px; height: 16px; }
   h1 {
-    font-family: var(--font-display); font-weight: 400;
-    font-size: clamp(34px, 6vw, 66px); line-height: 1.15; letter-spacing: var(--track);
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(34px, 6vw, 66px); line-height: 1.1; letter-spacing: -0.01em;
     color: var(--ink); max-width: 16ch;
   }
   .lede {
@@ -190,7 +190,7 @@
     color: var(--steel); font-size: 14px; text-align: center; line-height: 1.5;
   }
   .reveal-box.on { border-color: var(--green); background: rgba(0,190,67,0.08); color: var(--ink); }
-  .reveal-box .target { font-family: var(--font-display); color: var(--ember); margin-top: 10px; font-size: 22px; line-height: 1.2; }
+  .reveal-box .target { font-family: var(--font-display); font-weight: 700; color: var(--ember); margin-top: 10px; font-size: 22px; line-height: 1.2; }
 
   .fired-flash { animation: flash .6s ease; }
   @keyframes flash { 0% { box-shadow: 0 0 0 0 rgba(0,190,67,0.5); } 100% { box-shadow: 0 0 0 14px rgba(0,190,67,0); } }
@@ -231,8 +231,8 @@
 /* page intro block under nav */
 .page-intro { margin-bottom: 28px; }
 .page-intro h1.page-title {
-  font-family: var(--font-display); font-weight: 400; font-size: clamp(28px, 4vw, 44px);
-  line-height: 1.15; letter-spacing: var(--track); color: var(--ink); margin-bottom: 12px;
+  font-family: var(--font-display); font-weight: 700; font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.1; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 12px;
 }
 .page-intro p { color: var(--graphite); font-size: 16px; max-width: 64ch; }
 
