@@ -83,6 +83,10 @@ const app = express();
 app.use(express.json());
 app.use(express.static(join(__dirname, '..', 'public')));
 
+// Clean routes for the role pages.
+app.get('/pledge', (_req, res) => res.sendFile(join(__dirname, '..', 'public', 'pledge.html')));
+app.get('/coordinator', (_req, res) => res.sendFile(join(__dirname, '..', 'public', 'coordinator.html')));
+
 // Create a campaign with a hidden threshold.
 app.post('/api/campaign', async (req, res) => {
   try {

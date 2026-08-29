@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sealed Collective Action — Coordinator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Rozha+One&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+<div class="wrap">
+  <nav class="nav" id="nav"></nav>
+
+  <div class="page-intro">
+    <div class="eyebrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#ffb200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>
+      COORDINATOR · AI GUARDRAIL
+    </div>
+    <h1 class="page-title">Coordinate the cross-chain reveal</h1>
+    <p>The AI coordinator can only act on Midnight's proof. Below the hidden threshold it holds — nothing crosses chains. When the proof is valid, it relays the verified reveal to the EVM chain, which settles the coordinated action publicly.</p>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card" id="coordCard">
+        <div class="step-label">Guardrail</div>
+        <h2>Attempt coordinated reveal</h2>
+        <p class="hint">This asks Midnight for a reveal proof and, only if it is valid, relays it to the EVM chain. The AI never decides to fire — the zero-knowledge proof does.</p>
+        <button class="btn-ember" id="coordBtn" style="margin-top:14px;">Attempt coordinated reveal</button>
+        <div class="log" id="coordLog" aria-live="polite"></div>
+      </div>
+
+      <div class="card evm" id="evmCard">
+        <div class="step-label">Cross-chain settlement</div>
+        <h2>EVM chain</h2>
+        <div class="kv"><span class="k">network</span><span class="v" id="e-network">local (in-process EVM)</span></div>
+        <div class="kv"><span class="k">settler</span><span class="v muted" id="e-addr">—</span></div>
+        <div class="kv"><span class="k">relayer</span><span class="v muted" id="e-relayer">—</span></div>
+        <div class="kv"><span class="k">isUnlocked()</span><span class="v false" id="e-unlocked">false</span></div>
+        <div class="kv"><span class="k">event</span><span class="v" id="e-event">—</span></div>
+        <div class="kv"><span class="k">tx</span><span class="v muted" id="e-tx">—</span></div>
+        <div class="kv"><span class="k">gas used</span><span class="v" id="e-gas">—</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card observer" id="observerCard">
+        <div class="step-label">Live · public ledger (Midnight)</div>
+        <div class="status-line">
+          <h2 style="margin:0;">On-chain observer view</h2>
+          <span class="badge" id="badge">NO CAMPAIGN</span>
+        </div>
+        <p class="hint" style="margin-top:0;margin-bottom:18px;">Everything a chain snoop can read from the public ledger:</p>
+        <div class="kv"><span class="k">initialized</span><span class="v" id="v-init">false</span></div>
+        <div class="kv"><span class="k">unlocked</span><span class="v false" id="v-unlocked">false</span></div>
+        <div class="kv"><span class="k">pledge count</span><span class="v" id="v-count">0</span></div>
+        <div class="kv"><span class="k">targetCommit</span><span class="v muted" id="v-tc">—</span></div>
+        <div class="kv"><span class="k">thresholdCommit</span><span class="v muted" id="v-thc">—</span></div>
+        <div class="kv"><span class="k">revealedTarget</span><span class="v muted" id="v-rt">—</span></div>
+        <div class="commit-list">
+          <div class="lbl">opaque commitments — no intent, no identity</div>
+          <div class="commits" id="commits"></div>
+        </div>
+        <div class="reveal-box" id="revealBox">
+          Before the hidden threshold: the target stays hidden. No first-mover risk.
+          <div class="target" id="revealTarget" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/shared.js"></script>
+<script>
+  $('nav').innerHTML = navHtml('coordinator');
+  let wasUnlocked = false;
+
+  function logCoord(text, fired) {
+    const log = $('coordLog');
+    const e = document.createElement('div');
+    e.className = 'entry';
+    e.style.color = fired ? 'var(--green)' : 'var(--steel)';
+    e.textContent = text;
+    log.prepend(e);
+  }
+
+  $('coordBtn').onclick = async () => {
+    try {
+      busy($('coordBtn'), true, 'Checking Midnight proof…');
+      const r = await api('/api/coordinate', {});
+      renderObserver(r.snapshot);
+      if (r.fired) {
+        logCoord('FIRED — Midnight proof valid, relayed to EVM chain.', true);
+        $('evmCard').classList.add('fired-flash');
+        setTimeout(() => $('evmCard').classList.remove('fired-flash'), 700);
+        announce('Threshold reached. Proof valid. Coordinated action settled cross-chain.');
+      } else {
+        logCoord('HELD — ' + r.reason, false);
+        announce('Coordinator held. Threshold not reached. Nothing crossed chains.');
+      }
+    } catch (e) {
+      logCoord('error: ' + e.message, false);
+    } finally {
+      busy($('coordBtn'), false);
+    }
+  };
+
+  // Live observer so pledges from participants appear here in real time.
+  (async function loop() {
+    try {
+      const s = await api('/api/state');
+      renderObserver(s);
+      if (s && s.unlocked && !wasUnlocked) { $('coordBtn').disabled = false; }
+      wasUnlocked = !!(s && s.unlocked);
+    } catch {}
+    setTimeout(loop, 1500);
+  })();
+</script>
+</body>
+</html>

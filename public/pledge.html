@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sealed Collective Action — Pledge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Rozha+One&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+<div class="wrap">
+  <nav class="nav" id="nav"></nav>
+
+  <div class="single">
+    <div class="page-intro">
+      <div class="eyebrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffb200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        PARTICIPANT
+      </div>
+      <h1 class="page-title">Add your private pledge</h1>
+      <p>Say it however you want. An AI assistant phrases your pledge, and only an <strong>opaque commitment</strong> reaches the chain. Your words and your secret never leave this device. You cannot see who else pledged or how close the campaign is — that is the point.</p>
+    </div>
+
+    <div class="card" id="statusCard">
+      <div class="step-label">Campaign status</div>
+      <div class="status-line">
+        <h2 style="margin:0;">This campaign is</h2>
+        <span class="badge" id="badge">NO CAMPAIGN</span>
+      </div>
+      <p class="hint" id="statusHint" style="margin-top:0;">Waiting for an organizer to open a campaign…</p>
+    </div>
+
+    <div class="card" id="pledgeCard">
+      <div class="step-label">Your pledge</div>
+      <h2>Pledge in plain language <span class="ai-badge">AI</span></h2>
+      <div class="field">
+        <label for="intent">What will you do, and contingent on how many others?</label>
+        <textarea id="intent" rows="2" class="autogrow" placeholder="e.g. i'll report Dana too but only if i'm not the only one"></textarea>
+      </div>
+      <button class="btn-ember" id="pledgeBtn">Seal my pledge</button>
+      <div id="phrasedOut" aria-live="polite"></div>
+      <div class="err" id="pledgeErr" role="alert" aria-live="assertive"></div>
+      <p class="role-note">Only the commitment hash is submitted. The plaintext above is shown to you for confirmation and is never sent.</p>
+    </div>
+  </div>
+</div>
+
+<script src="/shared.js"></script>
+<script>
+  $('nav').innerHTML = navHtml('pledge');
+
+  document.querySelectorAll('textarea.autogrow').forEach((el) => {
+    el.addEventListener('input', () => autoGrow(el));
+    autoGrow(el);
+  });
+
+  function applyStatus(s) {
+    const initialized = s && s.initialized;
+    const unlocked = initialized && s.unlocked;
+    if (!initialized) {
+      $('badge').textContent = 'NO CAMPAIGN'; $('badge').className = 'badge';
+      $('statusHint').textContent = 'Waiting for an organizer to open a campaign…';
+      $('pledgeCard').classList.add('disabled-veil'); $('pledgeCard').setAttribute('inert', '');
+      return;
+    }
+    $('badge').textContent = unlocked ? 'UNLOCKED' : 'SEALED';
+    $('badge').className = 'badge ' + (unlocked ? 'unlocked' : '');
+    $('statusHint').textContent = unlocked
+      ? 'The threshold has been reached and the campaign has unlocked. Pledging is closed.'
+      : 'Sealed. Add your pledge below — nothing about the campaign is revealed to you.';
+    const closed = !!unlocked;
+    $('pledgeCard').classList.toggle('disabled-veil', closed);
+    if (closed) $('pledgeCard').setAttribute('inert', ''); else $('pledgeCard').removeAttribute('inert');
+  }
+
+  $('pledgeBtn').onclick = async () => {
+    $('pledgeErr').textContent = '';
+    const intent = $('intent').value.trim();
+    if (!intent) { $('pledgeErr').textContent = 'Type your intent first.'; $('intent').focus(); return; }
+    try {
+      busy($('pledgeBtn'), true, 'AI phrasing + sealing…');
+      const r = await api('/api/pledge', { rawIntent: intent });
+      $('phrasedOut').innerHTML =
+        `<div class="phrased"><span class="who">AI (${escapeHtml((r.phraser||'').replace(' (→ offline on error)',''))}) phrased →</span>${escapeHtml(r.phrased)}</div>`;
+      $('intent').value = '';
+      autoGrow($('intent'));
+      applyStatus(r.snapshot);
+      announce('Your pledge is sealed as an opaque commitment. The campaign stays sealed.');
+    } catch (e) {
+      $('pledgeErr').textContent = e.message;
+    } finally {
+      busy($('pledgeBtn'), false);
+    }
+  };
+  $('intent').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('pledgeBtn').click(); } });
+
+  // Keep the status fresh (organizer may create/unlock while this page is open).
+  (async function loop() {
+    try { applyStatus(await api('/api/state')); } catch {}
+    setTimeout(loop, 1500);
+  })();
+</script>
+</body>
+</html>
